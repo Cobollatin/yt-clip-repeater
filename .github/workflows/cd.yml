@@ -40,4 +40,5 @@ jobs:
           app_build_command: "npm run build"
           output_location: "dist/yt-clip-repeater/browser" # Built app content directory - optional
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+          github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
