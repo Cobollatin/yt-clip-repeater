@@ -1,0 +1,271 @@
+<div class="max-w-[900px] mx-auto font-sans p-5 relative">
+	<h2 class="mb-5 text-2xl font-bold">YouTube Clipper</h2>
+
+	<div class="flex flex-wrap items-center mb-5">
+		<label for="videoUrl" class="mr-2">YouTube Video URL:</label>
+		<input
+			type="text"
+			id="videoUrl"
+			[(ngModel)]="videoUrl"
+			placeholder="Enter YouTube video URL"
+			[disabled]="isLoading"
+			class="w-full md:w-[70%] p-2 mr-2.5 mb-2 md:mb-0"
+		/>
+		<button
+			(click)="loadVideo()"
+			[disabled]="isLoading || !videoUrl"
+			class="px-4 py-2 mt-2.5 md:mt-0 cursor-pointer bg-[#3498db] text-white rounded hover:bg-[#2980b9] disabled:bg-gray-300 disabled:cursor-not-allowed"
+		>
+			Load Video
+		</button>
+	</div>
+
+	<!-- Loading Spinner -->
+	<div
+		*ngIf="isLoading"
+		class="absolute top-0 left-0 z-10 flex items-center justify-center w-full h-full bg-black bg-opacity-60"
+	>
+		<div
+			class="border-8 border-gray-200 border-t-[#3498db] rounded-full w-[60px] h-[60px] animate-spin"
+		></div>
+	</div>
+
+	<div *ngIf="isVideoLoaded" class="mt-5">
+		<div #player></div>
+
+		<!-- Jump to Time Controls -->
+		<div class="mb-5">
+			<h3 class="mb-3 text-xl font-semibold">Jump to Time:</h3>
+
+			<div class="flex flex-wrap items-center gap-2.5">
+				<div *ngIf="showHours" class="flex flex-col mr-2.5">
+					<label for="jumpHours" class="mb-1.5">Hours:</label>
+					<input
+						type="number"
+						id="jumpHours"
+						[(ngModel)]="jumpStartHours"
+						min="0"
+						[max]="maxJumpStartHours"
+						step="1"
+						(input)="onJumpInputChange()"
+						class="p-2 border rounded"
+					/>
+				</div>
+
+				<div *ngIf="showMinutes" class="flex flex-col mr-2.5">
+					<label for="jumpMinutes" class="mb-1.5">Minutes:</label>
+					<input
+						type="number"
+						id="jumpMinutes"
+						[(ngModel)]="jumpStartMinutes"
+						min="0"
+						[max]="maxJumpStartMinutes"
+						step="1"
+						(input)="onJumpInputChange()"
+						class="p-2 border rounded"
+					/>
+				</div>
+
+				<div *ngIf="showSeconds" class="flex flex-col mr-2.5">
+					<label for="jumpSeconds" class="mb-1.5">Seconds:</label>
+					<input
+						type="number"
+						id="jumpSeconds"
+						[(ngModel)]="jumpStartSeconds"
+						min="0"
+						[max]="maxJumpStartSeconds"
+						step="1"
+						(input)="onJumpInputChange()"
+						class="p-2 border rounded"
+					/>
+				</div>
+			</div>
+
+			<button
+				(click)="jumpToTime()"
+				[disabled]="!isJumpTimeValid || isLooping"
+				class="px-4 py-2 mt-2.5 cursor-pointer bg-[#3498db] text-white rounded hover:bg-[#2980b9] disabled:bg-gray-300 disabled:cursor-not-allowed"
+			>
+				Jump
+			</button>
+
+			<div *ngIf="!isJumpTimeValid" class="text-red-500 mt-2.5">
+				Jump time exceeds video duration.
+			</div>
+		</div>
+
+		<!-- Loop Controls -->
+		<div class="mb-5">
+			<h3 class="mb-3 text-xl font-semibold">Loops:</h3>
+			<button
+				(click)="addLoop()"
+				[disabled]="isLoading"
+				class="px-4 py-2 mt-2.5 cursor-pointer bg-[#3498db] text-white rounded hover:bg-[#2980b9] disabled:bg-gray-300 disabled:cursor-not-allowed"
+			>
+				Add Loop
+			</button>
+
+			<div
+				*ngFor="let loop of loops; let i = index"
+				class="border border-gray-300 p-2.5 rounded mb-2.5"
+			>
+				<h4 class="mb-3 text-lg font-semibold">Loop {{ i + 1 }}</h4>
+				<div class="flex flex-wrap items-center gap-2.5">
+					<div *ngIf="showHours" class="flex flex-col mr-2.5">
+						<label for="loopStartHours-{{ loop.id }}" class="mb-1.5"
+							>Start Hours:</label
+						>
+						<input
+							type="number"
+							id="loopStartHours-{{ loop.id }}"
+							[(ngModel)]="loop.startHours"
+							min="0"
+							[max]="maxLoopStartHours"
+							step="1"
+							(input)="onLoopInputChange()"
+							class="p-2 border rounded"
+						/>
+					</div>
+
+					<div *ngIf="showMinutes" class="flex flex-col mr-2.5">
+						<label for="loopStartMinutes-{{ loop.id }}" class="mb-1.5"
+							>Start Minutes:</label
+						>
+						<input
+							type="number"
+							id="loopStartMinutes-{{ loop.id }}"
+							[(ngModel)]="loop.startMinutes"
+							min="0"
+							[max]="maxLoopStartMinutes"
+							step="1"
+							(input)="onLoopInputChange()"
+							class="p-2 border rounded"
+						/>
+					</div>
+
+					<div *ngIf="showSeconds" class="flex flex-col mr-2.5">
+						<label for="loopStartSeconds-{{ loop.id }}" class="mb-1.5"
+							>Start Seconds:</label
+						>
+						<input
+							type="number"
+							id="loopStartSeconds-{{ loop.id }}"
+							[(ngModel)]="loop.startSeconds"
+							min="0"
+							[max]="maxLoopStartSeconds"
+							step="1"
+							(input)="onLoopInputChange()"
+							class="p-2 border rounded"
+						/>
+					</div>
+				</div>
+
+				<div class="flex flex-wrap items-center gap-2.5 mt-3">
+					<div *ngIf="showHours" class="flex flex-col mr-2.5">
+						<label for="loopEndHours-{{ loop.id }}" class="mb-1.5"
+							>End Hours:</label
+						>
+						<input
+							type="number"
+							id="loopEndHours-{{ loop.id }}"
+							[(ngModel)]="loop.endHours"
+							min="0"
+							[max]="maxLoopEndHours"
+							step="1"
+							(input)="onLoopInputChange()"
+							class="p-2 border rounded"
+						/>
+					</div>
+
+					<div *ngIf="showMinutes" class="flex flex-col mr-2.5">
+						<label for="loopEndMinutes-{{ loop.id }}" class="mb-1.5"
+							>End Minutes:</label
+						>
+						<input
+							type="number"
+							id="loopEndMinutes-{{ loop.id }}"
+							[(ngModel)]="loop.endMinutes"
+							min="0"
+							[max]="maxLoopEndMinutes"
+							step="1"
+							(input)="onLoopInputChange()"
+							class="p-2 border rounded"
+						/>
+					</div>
+
+					<div *ngIf="showSeconds" class="flex flex-col mr-2.5">
+						<label for="loopEndSeconds-{{ loop.id }}" class="mb-1.5"
+							>End Seconds:</label
+						>
+						<input
+							type="number"
+							id="loopEndSeconds-{{ loop.id }}"
+							[(ngModel)]="loop.endSeconds"
+							min="0"
+							[max]="maxLoopEndSeconds"
+							step="1"
+							(input)="onLoopInputChange()"
+							class="p-2 border rounded"
+						/>
+					</div>
+				</div>
+
+				<button
+					(click)="removeLoop(loop.id)"
+					[disabled]="isLoading"
+					class="px-4 py-2 mt-2.5 cursor-pointer bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+				>
+					Remove Loop
+				</button>
+
+				<div *ngIf="!loop.isValid" class="text-red-500 mt-2.5">
+					Loop end time must be greater than start time and within video
+					duration.
+				</div>
+			</div>
+
+			<button
+				(click)="toggleLoop()"
+				[disabled]="!isAllLoopsValid || isLoading || !isJumpTimeValid"
+				class="px-4 py-2 mt-2.5 cursor-pointer bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+			>
+				{{ isLooping ? "Stop Loop" : "Bucle" }}
+			</button>
+
+			<div *ngIf="!isAllLoopsValid && isLooping" class="text-red-500 mt-2.5">
+				All loops must have end time greater than start time and within video
+				duration.
+			</div>
+		</div>
+
+		<!-- Volume Controls -->
+		<div class="mb-5">
+			<h3 class="mb-3 text-xl font-semibold">Volume Control:</h3>
+
+			<div class="flex flex-wrap items-center gap-2.5">
+				<input
+					type="range"
+					min="0"
+					max="100"
+					[(ngModel)]="volume"
+					(input)="onVolumeChange()"
+					[disabled]="isLoading"
+					class="w-[200px] md:w-auto"
+					title="Volume"
+				/>
+				<span>{{ volume }}</span>
+				<button
+					(click)="toggleMute()"
+					[disabled]="isLoading"
+					class="px-4 py-2 mt-2.5 md:mt-0 cursor-pointer bg-[#3498db] text-white rounded hover:bg-[#2980b9] disabled:bg-gray-300 disabled:cursor-not-allowed"
+				>
+					{{ isMuted ? "Unmute" : "Mute" }}
+				</button>
+			</div>
+		</div>
+
+		<div class="mt-2.5 font-bold">
+			Current Time: {{ formattedCurrentTime }} / {{ formattedDuration }}
+		</div>
+	</div>
+</div>

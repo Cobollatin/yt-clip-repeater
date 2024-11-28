@@ -1,12 +1,19 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Footer } from "./components/footer/footer.component";
+import { Header } from "./components/header/header.component";
+import { Layout } from "./components/layout/layout.component";
+import { YoutubeClipper } from "./components/main/main.component";
 
 @Component({
-  selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+	selector: 'app-root',
+	imports: [Layout, Header, Footer, YoutubeClipper],
+	templateUrl: './app.component.html',
 })
-export class AppComponent {
-  title = 'yt-clip-repeater';
+export class AppComponent implements OnInit {
+	ngOnInit() {
+		const spinner = document.getElementById("globalSpinner");
+		if (spinner) {
+			spinner.style.display = "none";
+		}
+	}
 }
